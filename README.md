@@ -1,6 +1,6 @@
 # FSharp.JsonSerializer
 
-Json Serializer using System.Text.Json that uses named 
+Json Serializer using System.Text.Json that uses named fields.
 
 ```
 type Union =
@@ -15,6 +15,18 @@ are both serialized as
 ```
 {type: "CaseA", alpha: 1, beta: 2}
 ```
+
+Add converters to `JsonSerializerOptions`
+
+```
+let options = JsonSerializerOptions()
+options.Converters.Add(OptionJsonConverter())
+options.Converters.Add(TupleJsonConverter())
+options.Converters.Add(UntaggedUnionJsonConverter(fun t -> t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<Choice<_,_>> ))
+options.Converters.Add(TaggedUnionJsonConverter())
+```
+
+Examples of encoding
 
 ```
 test "Option" {

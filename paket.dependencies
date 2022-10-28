@@ -1,0 +1,15 @@
+frameworks netstandard2.1
+storage none
+source https://api.nuget.org/v3/index.json
+
+nuget FSharp.Core >= 4.7.0 lowest_matching:true
+nuget System.Text.Json >= 6.0 lowest_matching: true
+
+group test
+framework net6.0
+storage none
+source https://api.nuget.org/v3/index.json
+
+nuget Microsoft.NET.Test.Sdk ~> 16.3.0
+nuget System.Text.Json >= 6.0
+nuget Expecto >= 9.0

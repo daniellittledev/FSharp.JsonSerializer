@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31410.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "FSharp.JsonSerializer", "FSharp.JsonSerializer\FSharp.JsonSerializer.fsproj", "{1844FA39-B201-4FB6-888B-607AA1D41FC3}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "FSharp.JsonSerializer.Tests", "FSharp.JsonSerializer.Tests\FSharp.JsonSerializer.Tests.fsproj", "{AEDFE5AC-3FBA-4C73-993A-C72FC0FB6DFE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "project", "project", "{7BB764A9-D3B2-40FA-B314-33773E5B7137}"
+	ProjectSection(SolutionItems) = preProject
+		..\.editorconfig = ..\.editorconfig
+		..\.gitattributes = ..\.gitattributes
+		..\.gitignore = ..\.gitignore
+		..\CHANGELOG.md = ..\CHANGELOG.md
+		..\LICENSE = ..\LICENSE
+		..\paket.dependencies = ..\paket.dependencies
+		..\README.md = ..\README.md
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1844FA39-B201-4FB6-888B-607AA1D41FC3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1844FA39-B201-4FB6-888B-607AA1D41FC3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1844FA39-B201-4FB6-888B-607AA1D41FC3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1844FA39-B201-4FB6-888B-607AA1D41FC3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEDFE5AC-3FBA-4C73-993A-C72FC0FB6DFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEDFE5AC-3FBA-4C73-993A-C72FC0FB6DFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEDFE5AC-3FBA-4C73-993A-C72FC0FB6DFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEDFE5AC-3FBA-4C73-993A-C72FC0FB6DFE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E78F7C19-E5DA-4D44-B9AC-3C10042C54D8}
+	EndGlobalSection
+EndGlobal
