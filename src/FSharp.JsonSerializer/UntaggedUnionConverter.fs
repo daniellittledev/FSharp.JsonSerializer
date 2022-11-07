@@ -65,10 +65,10 @@ type UntaggedUnionJsonConverter<'T>
             | TypeCode.DateTime
             | TypeCode.String ->
                 dict[JsonTokenType.String] <- c
+            | _ when typeof<System.Collections.IEnumerable>.IsAssignableFrom(clrType) ->
+                dict[JsonTokenType.StartArray] <- c
             | TypeCode.Object ->
                 dict[JsonTokenType.StartObject] <- c
-            | t when typeof<System.Collections.IEnumerable>.IsAssignableFrom(clrType) ->
-                dict[JsonTokenType.StartArray] <- c
             | _ -> 
                 ()
         dict

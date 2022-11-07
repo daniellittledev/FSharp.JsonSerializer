@@ -3,7 +3,7 @@
   
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Version>0.0.1</Version>
+    <Version>0.0.2</Version>
     <Description>Provides F# union and record support for System.Text.Json</Description>
     <Authors>Daniel Little</Authors>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
