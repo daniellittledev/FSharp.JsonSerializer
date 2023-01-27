@@ -1,4 +1,4 @@
-module UnionTests
+﻿module UnionTests
 
 open System
 open System.Text.Json
@@ -26,6 +26,12 @@ type UntaggedUnion =
     | Array of int list
     | Object of {| name: string |}
     | Boolean of bool
+
+//type RecordWithOptionalValueField = { value: string option }
+//type RecordWithRequiredValueField = { value: string }
+type TaggedUnionForMissingField =
+    | ValueOptional of value: string option
+    | ValueRequired of value: string
 
 let options = JsonSerializerOptions()
 options.Converters.Add(OptionJsonConverter())
@@ -91,5 +97,10 @@ let tests =
         test "Choice" {
             assertRoundTrip (Choice1Of2 "Hello") "\"Hello\""
             assertRoundTrip (Choice2Of2 5) "5"
+        }
+
+        test "Missing Fields For Tagged Union" {
+            assertRoundTrip (ValueOptional None) """{"type":"ValueOptional","value":null}"""
+            Expect.throws (fun () -> assertRoundTrip (ValueRequired null) """{"type":"ValueRequired","value":null}""") "TaggedUnionForMissingField.ValueRequired(value) was expected to be of type String, but was null."
         }
     ]
