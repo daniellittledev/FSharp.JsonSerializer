@@ -1,4 +1,4 @@
-﻿namespace System.Text.Json.Serialization.Custom
+namespace System.Text.Json.Serialization.Custom
 
 open System
 open System.Collections.Generic
@@ -238,7 +238,7 @@ type TaggedUnionJsonConverter<'T>
             let case = getCaseByTagReader &reader
             case
         else
-            failf "Failed to find union case field for %s: expected %s" ty.FullName unionTagName
+            failf "Failed to find union case field for %s: expected a field named '%s'" ty.FullName unionTagName
 
     let readObject (reader: byref<Utf8JsonReader>) (options: JsonSerializerOptions) =
         expectAlreadyRead JsonTokenType.StartObject "object" &reader ty
