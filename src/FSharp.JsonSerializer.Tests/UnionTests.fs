@@ -1,4 +1,4 @@
-﻿module UnionTests
+module UnionTests
 
 open System
 open System.Text.Json
@@ -16,6 +16,10 @@ type TaggedUnion =
     | Fields of alpha: int * beta: int
     | [<JsonName("Lst")>] List of values: int list
     | Nested of value: TaggedUnion
+type EnumUnion =
+    | One
+    | Two
+    | Three
 type UntaggedUnion =
     | String of string
     | Number of int
@@ -29,11 +33,14 @@ options.Converters.Add(TupleJsonConverter())
 options.Converters.Add(UntaggedUnionJsonConverter(fun t -> t = typeof<UntaggedUnion> || t.IsGenericType && t.GetGenericTypeDefinition() = typedefof<Choice<_,_>> ))
 options.Converters.Add(TaggedUnionJsonConverter())
 
+let serialize (object: 'a) = JsonSerializer.Serialize(object, options)
+let deserialize (json: string) = JsonSerializer.Deserialize<'a>(json, options)
+
 let assertRoundTrip (object: 'a) (json: string) =
-    let jsonActual = JsonSerializer.Serialize(object, options)
+    let jsonActual = serialize object
     Expect.equal jsonActual json "Expected JSON did not match serialized JSON"
 
-    let objectActual = JsonSerializer.Deserialize<'a>(json, options)
+    let objectActual = deserialize json
     Expect.equal objectActual object "Expected Object did not match deserialized Object"
 
 let tests =
@@ -52,8 +59,13 @@ let tests =
             assertRoundTrip [1; 2; 3] "[1,2,3]"
         }
 
+        test "Enum-like Union" {
+            assertRoundTrip One "\"One\""
+            assertRoundTrip Two "\"Two\""
+        }
+
         test "Tagged Union" {
-            assertRoundTrip Empty "\"Empty\""
+            assertRoundTrip Empty """{"type":"Empty"}"""
             assertRoundTrip (Unnamed 1) """{"type":"Unnamed","Item":1}"""
             assertRoundTrip (Inline 1) """{"type":"Inline","alpha":1}"""
             assertRoundTrip (Record { alpha = 1; beta = 2 }) """{"type":"Record","alpha":1,"beta":2}"""

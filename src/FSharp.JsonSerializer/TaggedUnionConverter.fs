@@ -1,4 +1,4 @@
-namespace System.Text.Json.Serialization.Custom
+﻿namespace System.Text.Json.Serialization.Custom
 
 open System
 open System.Collections.Generic
@@ -16,9 +16,8 @@ type private Field =
 
 type CaseFormat =
     | NoFields
-    | SingleField
+    | Fields
     | RecordFields
-    | MultipleFields
 
 type private TaggedCase =
     {
@@ -61,7 +60,14 @@ type TaggedUnionJsonConverter<'T>
                     NullValue = tryGetNullValue field.PropertyType
                 }
         |]
-
+    let enumStyle =
+        cases
+        |> Array.forall (fun uci ->
+            let fields = uci.GetFields()
+            match fields with
+            | [||] -> true
+            | _ -> false
+        )
     let cases =
         cases
         |> Array.map (fun uci ->
@@ -89,11 +95,13 @@ type TaggedUnionJsonConverter<'T>
                 )
 
             let caseFormat =
-                match caseFields with
-                | [||] -> NoFields
-                | [|f|] when FSharpType.IsRecord(f.Type, true) -> RecordFields
-                | [|_|] -> SingleField
-                | _ -> MultipleFields
+                if enumStyle then
+                    NoFields
+                else
+                    match caseFields with
+                    | [||] ->  Fields
+                    | [|f|] when FSharpType.IsRecord(f.Type, true) -> RecordFields
+                    | _ -> Fields
 
             let jsonFields =
                 match caseFormat with
@@ -301,9 +309,8 @@ type TaggedUnionJsonConverter<'T>
         match case.CaseFormat with
         | NoFields ->
             writeCaseNameAsValue writer case
-        | SingleField
-        | RecordFields
-        | MultipleFields ->
+        | Fields
+        | RecordFields ->
             writeObjectWithFields writer case value options
 
 
