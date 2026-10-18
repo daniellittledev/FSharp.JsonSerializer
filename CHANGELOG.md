@@ -23,6 +23,7 @@
 
 * Documentation site with guides and an API reference, published to GitHub Pages.
 * CI workflow that builds, tests, packs and builds the docs.
+* Release workflow that publishes to NuGet when a version tag is pushed.
 * Test suite organised by converter, with FsCheck round-trip properties.
 
 ## 0.0.3

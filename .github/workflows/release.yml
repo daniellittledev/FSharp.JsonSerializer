@@ -1,0 +1,57 @@
+name: Release
+
+# Push a tag matching the project <Version>, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
+# Requires the repository secret NUGET_API_KEY (an API key scoped to push FSharp.JsonSerializer).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  PROJECT: src/FSharp.JsonSerializer/FSharp.JsonSerializer.fsproj
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check tag matches project version
+        run: |
+          version=$(dotnet msbuild "$PROJECT" -getProperty:Version)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match project version $version"
+            exit 1
+          fi
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Build
+        run: dotnet build src/FSharp.JsonSerializer.sln -c Release
+
+      - name: Test
+        run: dotnet run --project src/FSharp.JsonSerializer.Tests -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack "$PROJECT" -c Release --no-build -o artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+      - name: Push to NuGet
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
