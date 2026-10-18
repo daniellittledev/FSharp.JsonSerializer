@@ -109,7 +109,9 @@ CI builds the docs on every pull request and publishes them to GitHub Pages from
    ```
 
 The Release workflow checks the tag matches `<Version>`, runs the tests, and pushes the package
-to NuGet. It runs in the `production` environment, which must hold a `NUGET_API_KEY` secret.
+to NuGet using [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing),
+so no API key is stored. It runs in the `production` environment, which holds a `NUGET_USER`
+secret with the nuget.org profile name.
 
 ## License
 

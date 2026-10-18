@@ -1,8 +1,10 @@
 name: Release
 
 # Push a tag matching the project <Version>, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
-# Runs in the `production` environment, which holds the NUGET_API_KEY secret
-# (an API key scoped to push FSharp.JsonSerializer) and any release protection rules.
+# Publishes with NuGet trusted publishing: GitHub's OIDC token is exchanged for a
+# short-lived API key, so no long-lived key is stored. Runs in the `production`
+# environment, which holds the NUGET_USER secret (nuget.org profile name) and any
+# release protection rules. The nuget.org policy must name release.yml and production.
 on:
   push:
     tags: ['v*']
@@ -19,6 +21,9 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: read
+      id-token: write # lets NuGet/login request a GitHub OIDC token
     steps:
       - uses: actions/checkout@v4
 
@@ -51,9 +56,16 @@ jobs:
           name: nupkg
           path: artifacts/*.nupkg
 
+      # Requested just before pushing, since the key expires after an hour
+      - name: NuGet login (OIDC to temporary API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
       - name: Push to NuGet
         run: >
           dotnet nuget push "artifacts/*.nupkg"
-          --api-key "${{ secrets.NUGET_API_KEY }}"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
           --source https://api.nuget.org/v3/index.json
           --skip-duplicate
