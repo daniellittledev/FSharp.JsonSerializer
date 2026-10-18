@@ -31,8 +31,10 @@ type UntaggedUnionJsonConverter<'T>
             if caseFields.Length <> 1 then
                 failf "Failed to convert type %s: All cases must have extactly one field to be Untagged" ty.FullName
 
-            let construct = fun value -> FSharpValue.PreComputeUnionConstructor(uci, true) [|value|]
-            let desturuct = fun value -> FSharpValue.PreComputeUnionReader(uci, true) value |> Array.head
+            let unionConstructor = FSharpValue.PreComputeUnionConstructor(uci, true)
+            let unionReader = FSharpValue.PreComputeUnionReader(uci, true)
+            let construct = fun value -> unionConstructor [|value|]
+            let desturuct = fun value -> unionReader value |> Array.head
 
             {
                 Type = caseFields[0].PropertyType

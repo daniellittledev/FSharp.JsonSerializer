@@ -37,6 +37,9 @@ type Optionality =
     | Required of value: string
     | RequiredNumber of number: int
     | Pair of left: int * right: int
+    | MaybeNumber of count: System.Nullable<int>
+    | Child of child: Shape
+    | Items of items: int list
 
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type Maybe =
@@ -179,6 +182,15 @@ let tests =
             test "Null is allowed for optional fields" {
                 assertRoundTrip (Optional None) """{"type":"Optional","value":null}"""
             }
+
+            test "Null is allowed for Nullable fields" {
+                assertRoundTrip (MaybeNumber(System.Nullable())) """{"type":"MaybeNumber","count":null}"""
+                assertRoundTrip (MaybeNumber(System.Nullable 3)) """{"type":"MaybeNumber","count":3}"""
+            }
+
+            test "Missing fields are required by default, even optional ones" {
+                assertReadFails<Optionality> """{"type":"Optional"}""" "Optional.value"
+            }
         ]
 
         testList "Errors" [
@@ -222,8 +234,17 @@ let tests =
                 assertReadsWith ignoreNulls """{"type":"Required"}""" (Required null)
             }
 
+            test "Missing Nullable fields read as empty" {
+                assertReadsWith ignoreNulls """{"type":"MaybeNumber"}""" (MaybeNumber(System.Nullable()))
+            }
+
             test "Missing value-type fields still fail" {
                 assertReadFailsWith<Optionality> ignoreNulls """{"type":"RequiredNumber"}""" "RequiredNumber.number"
+            }
+
+            test "Missing F# types still fail, since they can't be null" {
+                assertReadFailsWith<Optionality> ignoreNulls """{"type":"Child"}""" "Child.child"
+                assertReadFailsWith<Optionality> ignoreNulls """{"type":"Items"}""" "Items.items"
             }
         ]
     ]

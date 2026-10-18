@@ -10,6 +10,9 @@
 * Missing field errors name the case and field, e.g. `Missing field for union type MyUnion: Rename.name`.
 * Unknown numeric or boolean case tags, and unmatched untagged tokens, report the value instead of failing with an `InvalidOperationException`.
 * `[<JsonName>]` can be applied to union cases with fields under F# 9 and later, which validate attribute targets.
+* `Nullable<T>` fields accept `null`, and read as empty when missing and nulls are ignored.
+* With `WhenWritingNull`, a missing field of an F# type (record, union, list, tuple) now throws a `JsonException` instead of silently becoming `null`. Missing `option` fields still read as `None` and .NET reference types such as `string` as `null`.
+* Untagged unions build their reflection-based readers once per type instead of on every read and write.
 
 ### Changed
 

@@ -51,24 +51,36 @@ ofJson<Command> """{"type":"rename","NAME":"new","id":1,"ignored":true}"""
 (**
 ## Required fields
 
-Every field is required unless it can be null, i.e. an `option`, `unit` or a union that
-represents a case as null:
+By default every field must be present, including `option` fields:
 *)
 tryRead<Command> """{"type":"Archive"}"""
+(*** include-it ***)
+
+tryRead<Command> """{"type":"Tag","id":1}"""
+(*** include-it ***)
+
+(**
+A field may be `null` only if its type can be: `option`, `Nullable`, `unit` or a union
+that represents a case as null. Other types reject `null`, including `string`:
+*)
+ofJson<Command> """{"type":"Tag","id":1,"label":null}"""
 (*** include-it ***)
 
 tryRead<Command> """{"type":"Rename","id":1,"name":null}"""
 (*** include-it ***)
 
-ofJson<Command> """{"type":"Tag","id":1,"label":null}"""
-(*** include-it ***)
-
 (**
 ## Ignoring nulls
 
-With `DefaultIgnoreCondition = WhenWritingNull`, missing properties are allowed, as a writer with that
-setting would omit them. A missing `option` reads as `None` and a missing reference type
-reads as `null`. A missing value type such as `int` is still an error, since it has no null.
+With `DefaultIgnoreCondition = WhenWritingNull`, reading accepts JSON from writers that
+leave out null properties:
+
+* A missing `option` reads as `None`, and a missing `Nullable` as empty.
+* A missing .NET reference type, such as `string`, reads as `null`.
+* A missing value type (`int`) or F# type (record, union, list, tuple) is still an error,
+  since it can't be null.
+
+This setting only affects reading. The union converter still writes `null` fields.
 *)
 let lenient = JsonSerializerOptions()
 lenient.DefaultIgnoreCondition <- JsonIgnoreCondition.WhenWritingNull

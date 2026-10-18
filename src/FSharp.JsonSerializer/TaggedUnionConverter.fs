@@ -12,6 +12,8 @@ type private Field =
         Type: Type
         Names: string[]
         NullValue: obj voption
+        /// Value for an absent property when nulls are ignored; ValueNone means the field is required
+        MissingValue: obj voption
     }
 
 type CaseFormat =
@@ -30,6 +32,22 @@ type private TaggedCase =
         DefaultFields: obj[]
         CaseFormat: CaseFormat
     }
+
+module private Field =
+
+    /// F# types (records, unions, collections, tuples) never hold null, so they can't default to it.
+    /// Plain .NET reference types such as string can.
+    let missingValue (ty: Type) =
+        match tryGetNullValue ty with
+        | ValueSome v -> ValueSome v
+        | ValueNone when not ty.IsValueType && TypeCache.getKind ty = TypeCache.TypeKind.Other -> ValueSome null
+        | ValueNone -> ValueNone
+
+    let create (ty: Type) (names: string[]) =
+        { Type = ty
+          Names = names
+          NullValue = tryGetNullValue ty
+          MissingValue = missingValue ty }
 
 type TaggedUnionJsonConverter<'T>
     (
@@ -53,11 +71,7 @@ type TaggedUnionJsonConverter<'T>
                         let policy = options.PropertyNamingPolicy
                         [| convertName policy field.Name |]
                     | names -> names |> Array.map (fun n -> n.AsString())
-                {
-                    Type = field.PropertyType
-                    Names = finalNames
-                    NullValue = tryGetNullValue field.PropertyType
-                }
+                Field.create field.PropertyType finalNames
         |]
     let enumStyle =
         cases
@@ -88,9 +102,7 @@ type TaggedUnionJsonConverter<'T>
                             let policy = options.PropertyNamingPolicy
                             [| convertName policy name |]
 
-                    { Type = p.PropertyType
-                      Names = names
-                      NullValue = tryGetNullValue p.PropertyType }
+                    Field.create p.PropertyType names
                 )
 
             let caseFormat =
@@ -226,9 +238,8 @@ type TaggedUnionJsonConverter<'T>
         for i in 0 .. fields.Length - 1 do
             if not found[i] then
                 let f = case.Fields[i]
-                match f.NullValue with
+                match f.MissingValue with
                 | ValueSome v when ignoreNullValues options -> fields[i] <- v
-                | ValueNone when ignoreNullValues options && not f.Type.IsValueType -> ()
                 | _ ->
                     failf
                         "Missing field for union type %s: %s.%s"
