@@ -99,6 +99,20 @@ dotnet fsdocs watch --eval --properties Configuration=Release   # live preview a
 
 CI builds the docs on every pull request and publishes them to GitHub Pages from `main`.
 
+### Releasing
+
+1. Bump `<Version>` in `src/FSharp.JsonSerializer/FSharp.JsonSerializer.fsproj` and update `CHANGELOG.md`.
+2. Once that's merged to `main`, tag it and push the tag:
+
+   ```sh
+   git tag v0.1.0 && git push origin v0.1.0
+   ```
+
+The Release workflow checks the tag matches `<Version>`, runs the tests, and pushes the package
+to NuGet using [trusted publishing](https://learn.microsoft.com/nuget/nuget-org/trusted-publishing),
+so no API key is stored. It runs in the `production` environment, which holds a `NUGET_USER`
+secret with the nuget.org profile name.
+
 ## License
 
 [MIT](LICENSE)

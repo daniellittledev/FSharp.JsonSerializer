@@ -1,0 +1,71 @@
+name: Release
+
+# Push a tag matching the project <Version>, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
+# Publishes with NuGet trusted publishing: GitHub's OIDC token is exchanged for a
+# short-lived API key, so no long-lived key is stored. Runs in the `production`
+# environment, which holds the NUGET_USER secret (nuget.org profile name) and any
+# release protection rules. The nuget.org policy must name release.yml and production.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+  DOTNET_NOLOGO: 1
+  PROJECT: src/FSharp.JsonSerializer/FSharp.JsonSerializer.fsproj
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write # lets NuGet/login request a GitHub OIDC token
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Check tag matches project version
+        run: |
+          version=$(dotnet msbuild "$PROJECT" -getProperty:Version)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match project version $version"
+            exit 1
+          fi
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Build
+        run: dotnet build src/FSharp.JsonSerializer.sln -c Release
+
+      - name: Test
+        run: dotnet run --project src/FSharp.JsonSerializer.Tests -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack "$PROJECT" -c Release --no-build -o artifacts
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+
+      # Requested just before pushing, since the key expires after an hour
+      - name: NuGet login (OIDC to temporary API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
