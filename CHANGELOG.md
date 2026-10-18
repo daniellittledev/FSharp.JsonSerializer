@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0
 
 ### Fixed
 
@@ -22,6 +22,6 @@
 * CI workflow that builds, tests, packs and builds the docs.
 * Test suite organised by converter, with FsCheck round-trip properties.
 
-## 0.1
+## 0.0.3
 
 * Serialize Unions
