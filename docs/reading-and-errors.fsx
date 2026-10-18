@@ -70,7 +70,8 @@ With `DefaultIgnoreCondition = WhenWritingNull`, missing properties are allowed,
 setting would omit them. A missing `option` reads as `None` and a missing reference type
 reads as `null`. A missing value type such as `int` is still an error, since it has no null.
 *)
-let lenient = JsonSerializerOptions(DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)
+let lenient = JsonSerializerOptions()
+lenient.DefaultIgnoreCondition <- JsonIgnoreCondition.WhenWritingNull
 lenient.Converters.Add(OptionJsonConverter())
 lenient.Converters.Add(TaggedUnionJsonConverter())
 

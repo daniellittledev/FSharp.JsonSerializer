@@ -34,14 +34,18 @@ type ConfigValue =
     | Values of string list
     | Address of Endpoint
 
+let isConfigValue (t: Type) = t = typeof<ConfigValue>
+
 let options = JsonSerializerOptions()
-options.Converters.Add(UntaggedUnionJsonConverter(fun t -> t = typeof<ConfigValue>))
+options.Converters.Add(UntaggedUnionJsonConverter(isConfigValue))
 options.Converters.Add(TaggedUnionJsonConverter())
 
-JsonSerializer.Serialize([ Text "a"; Number 1.5m; Flag true; Values [ "x" ] ], options)
+let values = [ Text "a"; Number 1.5m; Flag true; Values [ "x" ] ]
+JsonSerializer.Serialize(values, options)
 (*** include-it ***)
 
-JsonSerializer.Deserialize<ConfigValue list>("""["b", 2, false, {"host":"localhost","port":80}]""", options)
+let json = """["b", 2, false, {"host":"localhost","port":80}]"""
+JsonSerializer.Deserialize<ConfigValue list>(json, options)
 (*** include-it ***)
 
 (**

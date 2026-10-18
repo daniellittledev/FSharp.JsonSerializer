@@ -34,7 +34,9 @@ let ofJson<'T> (json: string) = JsonSerializer.Deserialize<'T>(json, options)
 *)
 type Person = { name: string; nickname: string option }
 
-toJson [ { name = "Ada"; nickname = Some "Countess" }; { name = "Alan"; nickname = None } ]
+toJson
+    [ { name = "Ada"; nickname = Some "Countess" }
+      { name = "Alan"; nickname = None } ]
 (*** include-it ***)
 
 (**

@@ -56,7 +56,7 @@ and Status =
 let order =
     { id = 42
       note = None
-      status = Cancelled("Out of stock", true) }
+      status = Shipped "AB-123" }
 
 let json = JsonSerializer.Serialize(order, options)
 (*** include-value: json ***)

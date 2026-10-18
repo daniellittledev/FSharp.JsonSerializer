@@ -107,7 +107,8 @@ ofJson<Status list> """["enabled", 0]"""
 To rename a field of a case, put `JsonName` on the case with `Field` set to the F# field name:
 *)
 type Shape =
-    | [<JsonName("w", Field = "width"); JsonName("h", Field = "height")>] Rect of width: int * height: int
+    | [<JsonName("w", Field = "width"); JsonName("h", Field = "height")>]
+      Rect of width: int * height: int
     | Square of side: int
 
 toJson (Rect(3, 4))
@@ -122,7 +123,8 @@ is respected as well.
 `PropertyNamingPolicy` applies to field names that aren't set explicitly. Case tags are never
 transformed, since they identify the case rather than describe data.
 *)
-let camelOptions = JsonSerializerOptions(PropertyNamingPolicy = JsonNamingPolicy.CamelCase)
+let camelOptions = JsonSerializerOptions()
+camelOptions.PropertyNamingPolicy <- JsonNamingPolicy.CamelCase
 camelOptions.Converters.Add(TaggedUnionJsonConverter())
 
 type Measurement = Reading of Value: float * Unit: string
