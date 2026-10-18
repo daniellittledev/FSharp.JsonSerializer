@@ -62,7 +62,9 @@ let json = JsonSerializer.Serialize(order, options)
 (*** include-value: json ***)
 
 let roundTripped = JsonSerializer.Deserialize<Order>(json, options)
-(*** include-value: roundTripped = order ***)
+
+roundTripped = order
+(*** include-it ***)
 
 (**
 ## ASP.NET Core

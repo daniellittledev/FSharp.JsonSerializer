@@ -49,6 +49,14 @@ jobs:
       - name: Build docs
         run: dotnet fsdocs build --eval --strict --clean --properties Configuration=Release
 
+      # --strict ignores unrecognised (*** ... ***) commands and renders them as page text
+      - name: Check docs for unrendered directives
+        run: |
+          if grep -rlE 'include-(it|value|output|fsi)|\(\*\*' output --include='*.html'; then
+            echo "::error::Literate directives were rendered as text in the files above"
+            exit 1
+          fi
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: output
