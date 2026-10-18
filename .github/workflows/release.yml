@@ -1,7 +1,8 @@
 name: Release
 
 # Push a tag matching the project <Version>, e.g. `git tag v0.1.0 && git push origin v0.1.0`.
-# Requires the repository secret NUGET_API_KEY (an API key scoped to push FSharp.JsonSerializer).
+# Runs in the `production` environment, which holds the NUGET_API_KEY secret
+# (an API key scoped to push FSharp.JsonSerializer) and any release protection rules.
 on:
   push:
     tags: ['v*']
@@ -17,6 +18,7 @@ env:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
