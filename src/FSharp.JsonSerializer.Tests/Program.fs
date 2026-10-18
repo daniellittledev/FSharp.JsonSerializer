@@ -1,9 +1,13 @@
-﻿open Expecto
+open Expecto
 
 [<EntryPoint>]
 let main argv =
-    printfn "Running tests!"
-    let tests = testList "Tests" [
-        UnionTests.tests
+    testList "FSharp.JsonSerializer" [
+        OptionTests.tests
+        TupleTests.tests
+        CollectionTests.tests
+        TaggedUnionTests.tests
+        UntaggedUnionTests.tests
+        PropertyTests.tests
     ]
-    runTestsWithArgs { defaultConfig with colour = Logging.Colour0 } argv tests
+    |> runTestsWithCLIArgs [ CLIArguments.Colours 0 ] argv

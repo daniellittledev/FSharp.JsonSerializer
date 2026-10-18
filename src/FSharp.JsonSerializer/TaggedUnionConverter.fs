@@ -29,7 +29,6 @@ type private TaggedCase =
         NamesAsString: string[]
         DefaultFields: obj[]
         CaseFormat: CaseFormat
-        MinExpectedFieldCount: int
     }
 
 type TaggedUnionJsonConverter<'T>
@@ -155,7 +154,6 @@ type TaggedUnionJsonConverter<'T>
                 DefaultFields = defaultFields
                 Construct = construct
                 Destruct = desturuct
-                MinExpectedFieldCount = jsonFields |> Seq.length
             }
         )
 
@@ -212,31 +210,38 @@ type TaggedUnionJsonConverter<'T>
         (options: JsonSerializerOptions)
         =
         let fields = Array.copy case.DefaultFields
+        let found = Array.zeroCreate<bool> fields.Length
         let mutable cont = true
-        let mutable fieldsFound = 0
         while cont && (reader.Read()) do
             match reader.TokenType with
             | JsonTokenType.EndObject -> cont <- false
             | JsonTokenType.PropertyName ->
                 match fieldIndexByName &reader case with
                 | ValueSome (i, f) ->
-                    fieldsFound <- fieldsFound + 1
+                    found[i] <- true
                     fields[i] <- readField &reader case f options
                 | _ -> reader.Skip()
             | _ -> ()
 
-        if fieldsFound < case.MinExpectedFieldCount && not (ignoreNullValues options) then
-            failf "Missing field for union type %s" ty.FullName
+        for i in 0 .. fields.Length - 1 do
+            if not found[i] then
+                let f = case.Fields[i]
+                match f.NullValue with
+                | ValueSome v when ignoreNullValues options -> fields[i] <- v
+                | ValueNone when ignoreNullValues options && not f.Type.IsValueType -> ()
+                | _ ->
+                    failf
+                        "Missing field for union type %s: %s.%s"
+                        ty.FullName
+                        (case.Names[0].AsString())
+                        f.Names[0]
         case.Construct fields :?> 'T
 
     let getCaseByTagReader (reader: byref<Utf8JsonReader>) =
-        let found =
-            match casesByName.TryGetValue(getJsonName &reader) with
-            | true, c -> ValueSome c
-            | false, _ -> ValueNone
-        match found with
-        | ValueNone -> failf "Unknown case for union type %s: %s" ty.FullName (reader.GetString())
-        | ValueSome case -> case
+        let name = getJsonName &reader
+        match casesByName.TryGetValue(name) with
+        | true, case -> case
+        | false, _ -> failf "Unknown case for union type %s: %s" ty.FullName (name.AsString())
 
     let getCase (reader: byref<Utf8JsonReader>) =
         let mutable snapshot = reader
@@ -287,6 +292,9 @@ type TaggedUnionJsonConverter<'T>
         | JsonName.Int name -> writer.WriteNumberValue(name)
         | JsonName.Bool name -> writer.WriteBooleanValue(name)
 
+    // Receive null tokens so non-nullable unions fail instead of silently becoming null
+    override _.HandleNull = true
+
     override _.Read(reader, _typeToConvert, options) =
         match reader.TokenType with
         | JsonTokenType.Null ->
@@ -304,16 +312,25 @@ type TaggedUnionJsonConverter<'T>
             failExpecting "object" &reader ty
 
     override _.Write(writer, value, options) =
-        let tag = tagReader value
-        let case = cases[tag]
-        match case.CaseFormat with
-        | NoFields ->
-            writeCaseNameAsValue writer case
-        | Fields
-        | RecordFields ->
-            writeObjectWithFields writer case value options
+        if isNull (box value) then
+            writer.WriteNullValue()
+        else
+            let case = cases[tagReader value]
+            match case.CaseFormat with
+            | NoFields ->
+                writeCaseNameAsValue writer case
+            | Fields
+            | RecordFields ->
+                writeObjectWithFields writer case value options
 
 
+/// <summary>Serializes F# unions as JSON objects with a <c>"type"</c> tag and named fields.</summary>
+/// <remarks>
+/// <para>Unions where no case has fields are written as plain values, e.g. <c>"Red"</c>.</para>
+/// <para>A case with a single record field has the record's fields inlined into the case object.</para>
+/// <para>Register this after more specific converters such as <see cref="T:System.Text.Json.Serialization.Custom.OptionJsonConverter"/>
+/// and <see cref="T:System.Text.Json.Serialization.Custom.UntaggedUnionJsonConverter"/>, since it accepts every union type.</para>
+/// </remarks>
 type TaggedUnionJsonConverter(selector: (Type -> bool) option) =
     inherit JsonConverterFactory()
 
@@ -339,9 +356,11 @@ type TaggedUnionJsonConverter(selector: (Type -> bool) option) =
                 .Invoke([| options; unionCases |])
             :?> JsonConverter
 
+    /// Converts every F# union type.
     new() =
         TaggedUnionJsonConverter(None)
 
+    /// Converts only the union types for which <paramref name="selector"/> returns true.
     new(selector: Type -> bool) =
         TaggedUnionJsonConverter(Some selector)
 

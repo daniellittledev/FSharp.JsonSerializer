@@ -32,6 +32,7 @@ type TupleJsonConverter<'T>() =
         writer.WriteEndArray()
 
 
+/// Serializes F# tuples (reference and struct) as fixed-length JSON arrays, e.g. <c>(1, "a")</c> becomes <c>[1,"a"]</c>.
 type TupleJsonConverter() =
     inherit JsonConverterFactory()
 

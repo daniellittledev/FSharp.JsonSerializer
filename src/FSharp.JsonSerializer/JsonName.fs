@@ -5,12 +5,14 @@
 open System
 open System.Collections.Generic
 
+/// A union case tag or field name. Tags may be strings, integers or booleans.
 [<RequireQualifiedAccess>]
 type JsonName =
     | String of string
     | Int of int
     | Bool of bool
 
+    /// The name rendered as a string, e.g. <c>Int 3</c> becomes <c>"3"</c>.
     member this.AsString() =
         match this with
         | String name -> name
@@ -18,7 +20,18 @@ type JsonName =
         | Bool true -> "true"
         | Bool false -> "false"
 
-[<AttributeUsage(AttributeTargets.Property, AllowMultiple = true)>]
+/// <summary>Overrides the JSON name of a union case, union case field or record field.</summary>
+/// <remarks>
+/// The first name is used when writing; every name is accepted when reading.
+/// Set <c>Field</c> when placing the attribute on a union case to rename one of its fields.
+/// </remarks>
+/// <example><code>
+/// type Shape =
+///     | [&lt;JsonName("circle", "round")&gt;] Circle of radius: float
+///     | [&lt;JsonName("r", Field = "width")&gt;] Rect of width: float * height: float
+/// </code></example>
+// Union cases with fields compile to methods, cases without fields and record fields to properties
+[<AttributeUsage(AttributeTargets.Property ||| AttributeTargets.Method, AllowMultiple = true)>]
 type JsonNameAttribute(name: JsonName, otherNames: JsonName[]) =
     inherit Attribute()
 
@@ -47,6 +60,7 @@ type JsonNameAttribute(name: JsonName, otherNames: JsonName[]) =
     new(name: bool, [<ParamArray>] otherNames: obj[]) =
         JsonNameAttribute(JsonName.Bool name, Array.map convertName otherNames)
 
+/// Equality comparer for <see cref="T:System.Text.Json.Serialization.JsonName"/> using the given string comparison for string names.
 type JsonNameComparer(stringComparer: StringComparer) =
 
     static member val OrdinalIgnoreCase = JsonNameComparer(StringComparer.OrdinalIgnoreCase)

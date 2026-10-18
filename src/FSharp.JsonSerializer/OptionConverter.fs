@@ -18,6 +18,8 @@ type OptionJsonConverter<'T>() =
         | Some x -> JsonSerializer.Serialize<'T>(writer, x, options)
 
 
+/// <summary>Serializes <c>Some x</c> as <c>x</c> and <c>None</c> as <c>null</c>.</summary>
+/// <remarks>Nested options are not distinguishable: <c>Some None</c> is written as <c>null</c> and read back as <c>None</c>.</remarks>
 type OptionJsonConverter() =
     inherit JsonConverterFactory()
 
