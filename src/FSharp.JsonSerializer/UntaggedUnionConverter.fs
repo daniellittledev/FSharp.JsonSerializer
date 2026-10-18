@@ -31,8 +31,10 @@ type UntaggedUnionJsonConverter<'T>
             if caseFields.Length <> 1 then
                 failf "Failed to convert type %s: All cases must have extactly one field to be Untagged" ty.FullName
 
-            let construct = fun value -> FSharpValue.PreComputeUnionConstructor(uci, true) [|value|]
-            let desturuct = fun value -> FSharpValue.PreComputeUnionReader(uci, true) value |> Array.head
+            let unionConstructor = FSharpValue.PreComputeUnionConstructor(uci, true)
+            let unionReader = FSharpValue.PreComputeUnionReader(uci, true)
+            let construct = fun value -> unionConstructor [|value|]
+            let desturuct = fun value -> unionReader value |> Array.head
 
             {
                 Type = caseFields[0].PropertyType
@@ -76,14 +78,10 @@ type UntaggedUnionJsonConverter<'T>
     // Read
 
     let getCaseByElementType (reader: byref<Utf8JsonReader>) =
-        let found =
-            match casesByJsonType.TryGetValue(reader.TokenType) with
-            | true, p -> ValueSome p
-            | false, _ -> ValueNone
-        match found with
-        | ValueNone ->
-            failf "Unknown case for union type %s due to unmatched field type: %s" ty.FullName (reader.GetString())
-        | ValueSome case -> case
+        match casesByJsonType.TryGetValue(reader.TokenType) with
+        | true, case -> case
+        | false, _ ->
+            failf "Unknown case for union type %s due to unmatched JSON token: %A" ty.FullName reader.TokenType
 
     let readUnwrapedUntagged (reader: byref<Utf8JsonReader>) (options: JsonSerializerOptions) =
         let case = getCaseByElementType &reader
@@ -98,13 +96,27 @@ type UntaggedUnionJsonConverter<'T>
         let value = case.Destruct value
         JsonSerializer.Serialize(writer, value, case.Type, options)
 
+    // Receive null tokens so a union fails instead of silently becoming null
+    override _.HandleNull = true
+
     override _.Read(reader, _typeToConvert, options) =
-        readUnwrapedUntagged &reader options
+        match reader.TokenType with
+        | JsonTokenType.Null -> failf "Union %s can't be deserialized from null" ty.FullName
+        | _ -> readUnwrapedUntagged &reader options
 
     override _.Write(writer, value, options) =
-        writeCaseValue writer value options
+        if isNull (box value) then
+            writer.WriteNullValue()
+        else
+            writeCaseValue writer value options
 
 
+/// <summary>Serializes F# unions as the bare value of their single field, choosing the case by JSON token type when reading.</summary>
+/// <remarks>
+/// <para>Every case must have exactly one field, and each case must map to a distinct JSON token type
+/// (number, string, boolean, array or object).</para>
+/// <para>Usually registered with a selector, since most unions should be tagged.</para>
+/// </remarks>
 type UntaggedUnionJsonConverter(selector: (Type -> bool) option) =
     inherit JsonConverterFactory()
 
@@ -128,9 +140,11 @@ type UntaggedUnionJsonConverter(selector: (Type -> bool) option) =
                 .Invoke([| unionCases |])
             :?> JsonConverter
 
+    /// Converts every F# union type.
     new() =
         UntaggedUnionJsonConverter(None)
 
+    /// Converts only the union types for which <paramref name="selector"/> returns true.
     new(selector: Type -> bool) =
         UntaggedUnionJsonConverter(Some selector)
 

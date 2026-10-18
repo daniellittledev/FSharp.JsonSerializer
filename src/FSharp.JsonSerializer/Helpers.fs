@@ -34,7 +34,7 @@ let isNullableUnion (ty: Type) =
     )
 
 let rec tryGetNullValue (ty: Type) : obj voption =
-    if isNullableUnion ty then
+    if isNullableUnion ty || not (isNull (Nullable.GetUnderlyingType ty)) then
         ValueSome null
     elif ty = typeof<unit> then
         ValueSome ()

@@ -11,3 +11,8 @@ paket-files/
 .vscode
 *.user
 .idea/
+
+# fsdocs
+output/
+tmp/
+.fsdocs/

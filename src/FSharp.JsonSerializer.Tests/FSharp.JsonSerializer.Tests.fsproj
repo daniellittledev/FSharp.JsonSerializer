@@ -3,19 +3,22 @@
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors></WarningsAsErrors>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <IsPackable>false</IsPackable>
   </PropertyGroup>
   
   <ItemGroup>
-    <None Remove="C:\Users\hello\.nuget\packages\fsharp.core\6.0.6\contentFiles\any\netstandard2.1\FSharp.Core.xml" />
-  </ItemGroup>
-  
-  <ItemGroup>
     <None Include="paket.references" />
-    <Compile Include="UnionTests.fs" />
+    <Compile Include="Json.fs" />
+    <Compile Include="OptionTests.fs" />
+    <Compile Include="TupleTests.fs" />
+    <Compile Include="CollectionTests.fs" />
+    <Compile Include="TaggedUnionTests.fs" />
+    <Compile Include="UntaggedUnionTests.fs" />
+    <Compile Include="PropertyTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
     

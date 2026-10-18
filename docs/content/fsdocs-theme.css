@@ -1,0 +1,15 @@
+/* Overrides for the fsdocs default theme.
+   Goal: code blocks fit 80 columns on common laptop widths (1024px and up),
+   so examples can follow the usual 80-char line limit without scrolling. */
+
+:root {
+    --main-menu-width: 240px;
+    --page-menu-width: 200px;
+    --container-xl: 1280px;
+    --code-font-size: 14px;
+}
+
+#content pre,
+#content code {
+    font-size: var(--code-font-size);
+}
